@@ -16,12 +16,12 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { Member, GymAnnouncement, GymNotification, PlanChangeRequest, WorkoutPlan, DietPlan } from "./types";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAp4NDkbtFi-S6wBew0Iv5KW3XihYgKZvo",
-  authDomain: "arpan-gym-fitness.firebaseapp.com",
-  projectId: "arpan-gym-fitness",
-  storageBucket: "arpan-gym-fitness.firebasestorage.app",
-  messagingSenderId: "480284459138",
-  appId: "1:480284459138:web:ec2caf747bdb81186bf49b"
+  apiKey: "AIzaSyBHaBcS_qhAgJ3PWhjqpgSSMDaol3zQzng",
+  authDomain: "singh-fitness.firebaseapp.com",
+  projectId: "singh-fitness",
+  storageBucket: "singh-fitness.firebasestorage.app",
+  messagingSenderId: "389000954327",
+  appId: "1:389000954327:web:dc5aecc77de06766b94b92"
 };
 
 const app = initializeApp(firebaseConfig);
