@@ -1,5 +1,5 @@
 {
-  "name": "Arpan Gym Dashboard",
+  "name": "Singh Fitness Gym Dashboard",
   "description": "A premium fitness and nutrition member dashboard featuring a frosted glass design, streak tracking, interactive workout routines, meal planners, and attendance scanning.",
   "requestFramePermissions": ["camera"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

@@ -34,7 +34,7 @@ const WeightChart = React.lazy(() => import("./components/WeightChart"));
 const AttendanceScanner = React.lazy(() => import("./components/AttendanceScanner"));
 
 // Attendance QR token — must match the value in AttendanceScanner.tsx
-const ATTENDANCE_TOKEN = "arpan-gym-attend-v1";
+const ATTENDANCE_TOKEN = "singh-fitness-gym-attend-v1";
 
 import { 
   Dumbbell, 
@@ -165,7 +165,7 @@ export default function App() {
 
   // Gym Config State (QR code / UPI configurations)
   const [gymConfig, setGymConfig] = useState({
-    upiId: "pay@arpanfitness",
+    upiId: "pay@singh-fitness",
     qrCodeUrl: ""
   });
 
@@ -329,7 +329,7 @@ export default function App() {
         trainerPhone: "",
         workoutPlanId: "",
         dietPlanId: "",
-        trainerNote: "Welcome to Arpan Gym! Awaiting administrator verification and onboarding.",
+        trainerNote: "Welcome to Singh Fitness Gym! Awaiting administrator verification and onboarding.",
         waterIntake: 0.8,
         sleepHours: 7.0,
         weightHistory: [{ date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit' }), weight: Number(regForm.weight) || 75 }],
@@ -417,11 +417,11 @@ export default function App() {
 
         // Gym payment configuration: seed defaults if not yet set
         const loadedConfigs = await seedCollectionIfEmpty<{ id: string; upiId?: string; qrCodeUrl?: string }>("gymConfig", [
-          { id: "settings", upiId: "pay@arpanfitness", qrCodeUrl: "" }
+          { id: "settings", upiId: "pay@singh-fitness", qrCodeUrl: "" }
         ]);
-        const currentConfig = loadedConfigs.find(c => c.id === "settings") || { upiId: "pay@arpanfitness", qrCodeUrl: "" };
+        const currentConfig = loadedConfigs.find(c => c.id === "settings") || { upiId: "pay@singh-fitness", qrCodeUrl: "" };
         setGymConfig({
-          upiId: currentConfig.upiId || "pay@arpanfitness",
+          upiId: currentConfig.upiId || "pay@singh-fitness",
           qrCodeUrl: currentConfig.qrCodeUrl || ""
         });
 
@@ -450,12 +450,12 @@ export default function App() {
 
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'arpan_gym_members' && e.newValue) setMembers(JSON.parse(e.newValue));
-      if (e.key === 'arpan_gym_announcements' && e.newValue) setAnnouncements(JSON.parse(e.newValue));
-      if (e.key === 'arpan_gym_notifs' && e.newValue) setNotifications(JSON.parse(e.newValue));
-      if (e.key === 'arpan_gym_plan_requests' && e.newValue) setPlanRequests(JSON.parse(e.newValue));
-      if (e.key === 'arpan_gym_workout_plans' && e.newValue) setWorkoutPlans(JSON.parse(e.newValue));
-      if (e.key === 'arpan_gym_diet_plans' && e.newValue) setDietPlans(JSON.parse(e.newValue));
+      if (e.key === 'singh_fitness_gym_members' && e.newValue) setMembers(JSON.parse(e.newValue));
+      if (e.key === 'singh_fitness_gym_announcements' && e.newValue) setAnnouncements(JSON.parse(e.newValue));
+      if (e.key === 'singh_fitness_gym_notifs' && e.newValue) setNotifications(JSON.parse(e.newValue));
+      if (e.key === 'singh_fitness_gym_plan_requests' && e.newValue) setPlanRequests(JSON.parse(e.newValue));
+      if (e.key === 'singh_fitness_gym_workout_plans' && e.newValue) setWorkoutPlans(JSON.parse(e.newValue));
+      if (e.key === 'singh_fitness_gym_diet_plans' && e.newValue) setDietPlans(JSON.parse(e.newValue));
     };
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
@@ -463,7 +463,7 @@ export default function App() {
 
   useEffect(() => {
     if (isLoading) return;
-    localStorage.setItem("arpan_gym_members", JSON.stringify(members));
+    localStorage.setItem("singh_fitness_gym_members", JSON.stringify(members));
     members.forEach((m) => {
       saveDocument("members", m);
     });
@@ -471,7 +471,7 @@ export default function App() {
 
   useEffect(() => {
     if (isLoading) return;
-    localStorage.setItem("arpan_gym_announcements", JSON.stringify(announcements));
+    localStorage.setItem("singh_fitness_gym_announcements", JSON.stringify(announcements));
     announcements.forEach((a) => {
       saveDocument("announcements", a);
     });
@@ -479,7 +479,7 @@ export default function App() {
 
   useEffect(() => {
     if (isLoading) return;
-    localStorage.setItem("arpan_gym_notifs", JSON.stringify(notifications));
+    localStorage.setItem("singh_fitness_gym_notifs", JSON.stringify(notifications));
     notifications.forEach((n) => {
       saveDocument("notifications", n);
     });
@@ -487,7 +487,7 @@ export default function App() {
 
   useEffect(() => {
     if (isLoading) return;
-    localStorage.setItem("arpan_gym_plan_requests", JSON.stringify(planRequests));
+    localStorage.setItem("singh_fitness_gym_plan_requests", JSON.stringify(planRequests));
     planRequests.forEach((pr) => {
       saveDocument("planRequests", pr);
     });
@@ -495,7 +495,7 @@ export default function App() {
 
   useEffect(() => {
     if (isLoading) return;
-    localStorage.setItem("arpan_gym_workout_plans", JSON.stringify(workoutPlans));
+    localStorage.setItem("singh_fitness_gym_workout_plans", JSON.stringify(workoutPlans));
     workoutPlans.forEach((wp) => {
       saveDocument("workoutPlans", wp);
     });
@@ -503,7 +503,7 @@ export default function App() {
 
   useEffect(() => {
     if (isLoading) return;
-    localStorage.setItem("arpan_gym_diet_plans", JSON.stringify(dietPlans));
+    localStorage.setItem("singh_fitness_gym_diet_plans", JSON.stringify(dietPlans));
     dietPlans.forEach((dp) => {
       saveDocument("dietPlans", dp);
     });
@@ -736,7 +736,7 @@ export default function App() {
     setNotifications(prev => [adminAlert, ...prev]);
 
     setShowPlanRequestModal(false);
-    triggerToast("Plan change request submitted to Coach Arpan! 🤝");
+    triggerToast("Plan change request submitted to Coach Singh Fitness! 🤝");
   };
 
   // --- Scanner Check-In Action (QR Code scan simulation) ---
@@ -988,7 +988,7 @@ export default function App() {
       doc.setFont("helvetica", "italic");
       doc.setFontSize(8);
       doc.setTextColor(140, 140, 140);
-      doc.text("Generated by Arpan Gym Ledger - Maintain absolute discipline and consistency.", 15, 281);
+      doc.text("Generated by Singh Fitness Gym Ledger - Maintain absolute discipline and consistency.", 15, 281);
       
       doc.save(`${currentMember.name.replace(/\s+/g, "_")}_Monthly_Progress.pdf`);
       triggerToast("Monthly Progress PDF successfully generated and downloaded!");
@@ -1179,7 +1179,7 @@ export default function App() {
       doc.setFont("helvetica", "italic");
       doc.setFontSize(8);
       doc.setTextColor(140, 140, 140);
-      doc.text("Page 1 of 3 - Arpan Gym System Audit Report", 15, 281);
+      doc.text("Page 1 of 3 - Singh Fitness Gym System Audit Report", 15, 281);
       
       // --- PAGE 2: ABSENCE, INACTIVITY & ENGAGEMENT AUDIT ---
       doc.addPage();
@@ -1319,7 +1319,7 @@ export default function App() {
       doc.setFont("helvetica", "italic");
       doc.setFontSize(8);
       doc.setTextColor(140, 140, 140);
-      doc.text("Page 2 of 3 - Arpan Gym System Audit Report", 15, 281);
+      doc.text("Page 2 of 3 - Singh Fitness Gym System Audit Report", 15, 281);
       
       // --- PAGE 3: COMPREHENSIVE MEMBERS LEDGER (MEMBERS DATA) ---
       doc.addPage();
@@ -1372,7 +1372,7 @@ export default function App() {
           doc.setFont("helvetica", "italic");
           doc.setFontSize(8);
           doc.setTextColor(140, 140, 140);
-          doc.text("Page 3 of 3 - Arpan Gym System Audit Report", 15, 281);
+          doc.text("Page 3 of 3 - Singh Fitness Gym System Audit Report", 15, 281);
           
           doc.addPage();
           
@@ -1431,9 +1431,9 @@ export default function App() {
       doc.setFont("helvetica", "italic");
       doc.setFontSize(8);
       doc.setTextColor(140, 140, 140);
-      doc.text("Page 3 of 3 - Arpan Gym System Audit Report", 15, 281);
+      doc.text("Page 3 of 3 - Singh Fitness Gym System Audit Report", 15, 281);
       
-      doc.save(`Arpan_Gym_System_Audit_${today.toISOString().split("T")[0]}.pdf`);
+      doc.save(`Singh Fitness_Gym_System_Audit_${today.toISOString().split("T")[0]}.pdf`);
       triggerToast("System Audit Gym Report PDF generated and downloaded!");
     } catch (err) {
       console.error("Admin PDF report failed:", err);
@@ -1467,8 +1467,8 @@ export default function App() {
         const welcomeNotif: GymNotification = {
           id: `welcome-${Date.now()}`,
           timestamp: "Just Now",
-          title: "🎉 Welcome to Arpan Gym Premium!",
-          message: `Your account has been fully verified and approved by Coach Arpan! Assigned: ${
+          title: "🎉 Welcome to Singh Fitness Gym Premium!",
+          message: `Your account has been fully verified and approved by Coach Singh Fitness! Assigned: ${
             workoutPlans.find(p => p.id === selectedWorkoutPlan)?.name
           }. Check your Fitness and Profile tabs!`,
           type: "success",
@@ -1488,7 +1488,7 @@ export default function App() {
           workoutPlanId: selectedWorkoutPlan,
           dietPlanId: selectedDietPlan,
           trainerNote: trainerNoteInput || "Get started on your compound forms today!",
-          trainerName: "Coach Arpan",
+          trainerName: "Coach Singh Fitness",
           trainerPhone: "+91 99999-88888",
           points: m.points + 200 // Bonus on onboarding!
         };
@@ -1716,7 +1716,7 @@ export default function App() {
     const newAnn: GymAnnouncement = {
       id: `ann-${Date.now()}`,
       date: new Date().toISOString().split("T")[0],
-      author: "Coach Arpan (Owner)",
+      author: "Coach Singh Fitness (Owner)",
       title: newAnnouncementTitle,
       content: newAnnouncementContent,
       important: true
@@ -1746,12 +1746,12 @@ export default function App() {
     try {
       const updatedConfig = {
         id: "settings",
-        upiId: bUpiId || "pay@arpanfitness",
+        upiId: bUpiId || "pay@singh_fitness",
         qrCodeUrl: bQrCodeUrl || ""
       };
       await saveDocument("gymConfig", updatedConfig);
       setGymConfig({
-        upiId: bUpiId || "pay@arpanfitness",
+        upiId: bUpiId || "pay@singh_fitness",
         qrCodeUrl: bQrCodeUrl || ""
       });
       triggerToast("Payment configuration saved successfully! 💳");
@@ -1827,8 +1827,11 @@ export default function App() {
       address: "",
       height: 178,
       weight: 79.5,
+      targetWeight: 79.5,
       preferredShift: "Morning Shift",
-      goals: "Muscle Gain & Strength"
+      goals: "Muscle Gain & Strength",
+      gymAccess: "",
+      referralCode: ""
     });
 
     triggerToast("UPI Transaction Logged! Awaiting Owner Approval. 💳");
@@ -1909,7 +1912,7 @@ export default function App() {
           </div>
           <div>
             <h1 className="text-2xl font-black uppercase tracking-tight">
-              Arpan <span className="text-yellow-400">Gym</span>
+              Singh Fitness <span className="text-yellow-400">Gym</span>
             </h1>
             <p className="text-[10px] text-white/50 uppercase tracking-widest font-mono mt-1">Connecting securely...</p>
           </div>
@@ -1941,7 +1944,7 @@ export default function App() {
         <div className="flex items-center gap-3">
           <div>
             <h1 className="text-xl md:text-2xl font-black tracking-tighter uppercase leading-none">
-              Arpan <span className="text-yellow-400">Gym</span>
+              Singh Fitness <span className="text-yellow-400">Gym</span>
             </h1>
             <p className="text-[9px] uppercase tracking-widest text-white/40 font-black mt-1">
               {activeRole === "admin" ? "Owner Control System" : "Member Portal"}
@@ -1976,7 +1979,7 @@ export default function App() {
               <div className="text-right hidden sm:block">
                 <p className="text-[9px] text-white/40 uppercase tracking-widest font-black leading-none">Session Profile</p>
                 <p className="text-xs font-mono font-bold text-yellow-400 mt-1">
-                  {activeRole === "admin" ? "Coach Arpan" : currentMember?.name}
+                  {activeRole === "admin" ? "Coach Singh Fitness" : currentMember?.name}
                 </p>
               </div>
               <div className="w-10 h-10 rounded-full border border-yellow-400/50 p-0.5 bg-neutral-900 flex items-center justify-center text-xs font-black text-yellow-400 uppercase">
@@ -2063,7 +2066,7 @@ export default function App() {
                 </div>
                 <h2 className="text-2xl font-black uppercase tracking-tight text-white">Onboarding Registration</h2>
                 <p className="text-xs text-white/40 uppercase tracking-wider mt-1">
-                  Complete your Arpan Gym fitness profile & subscription payment
+                  Complete your Singh Fitness Gym fitness profile & subscription payment
                 </p>
               </div>
 
@@ -2327,13 +2330,13 @@ export default function App() {
                             className="w-48 h-48 mx-auto rounded-xl object-contain"
                           />
                           <div className="text-center mt-3 text-black animate-pulse">
-                            <p className="text-[9px] font-black uppercase text-black/50 tracking-widest">Arpan Gym Merchant QR</p>
+                            <p className="text-[9px] font-black uppercase text-black/50 tracking-widest">Singh Fitness Gym Merchant QR</p>
                             <p className="text-xs font-mono font-bold mt-1">UPI ID: {gymConfig.upiId}</p>
                           </div>
                         </div>
                       ) : (
                         <div className="max-w-sm mx-auto bg-yellow-400/5 border border-yellow-400/20 p-5 rounded-2xl mb-6 text-center">
-                          <p className="text-[9px] font-black uppercase text-yellow-400 tracking-widest">Arpan Gym Direct UPI Transfer</p>
+                          <p className="text-[9px] font-black uppercase text-yellow-400 tracking-widest">Singh Fitness Gym Direct UPI Transfer</p>
                           <p className="text-lg font-mono font-black text-white mt-1.5 select-all">{gymConfig.upiId}</p>
                           <p className="text-[10px] text-white/40 mt-2">Tap/Hold the UPI ID to copy, then pay using any UPI App (GPay, PhonePe, Paytm)</p>
                         </div>
@@ -2401,7 +2404,7 @@ export default function App() {
             <p className="text-sm text-yellow-400/80 font-bold uppercase tracking-wider mb-6">Payment and registration details under review</p>
 
             <p className="text-xs text-white/50 leading-relaxed max-w-md mx-auto mb-8">
-              Hello <span className="text-white font-bold">{currentMember.name}</span>, thank you for completing your premium enrollment! Our owner and head dietician, Coach Arpan, is currently reviewing your weight ({currentMember.weight} kg), height ({currentMember.height} cm), and goals ({currentMember.goals}) to configure your custom workout days and macros list.
+              Hello <span className="text-white font-bold">{currentMember.name}</span>, thank you for completing your premium enrollment! Our owner and head dietician, Coach Singh Fitness, is currently reviewing your weight ({currentMember.weight} kg), height ({currentMember.height} cm), and goals ({currentMember.goals}) to configure your custom workout days and macros list.
             </p>
 
             <div className="p-4 bg-white/5 rounded-2xl max-w-sm mx-auto border border-white/5 text-left mb-8">
@@ -2410,7 +2413,7 @@ export default function App() {
                 <p>Phone: <span className="font-mono text-white">{currentMember.phone}</span></p>
                 <p>Address: <span className="text-white">{currentMember.address}</span></p>
                 <p>Preferred Shift: <span className="font-bold text-yellow-400">{currentMember.preferredShift}</span></p>
-                <p>Assigned Trainer: <span className="text-white">Coach Arpan (Awaiting approval)</span></p>
+                <p>Assigned Trainer: <span className="text-white">Coach Singh Fitness (Awaiting approval)</span></p>
               </div>
             </div>
 
@@ -2936,7 +2939,7 @@ export default function App() {
               {activeFitnessSection === "workout" && (
                 <div className="bg-white/[0.02] border border-white/[0.08] rounded-[32px] p-6 shadow-2xl text-center animate-fadeIn">
                 <h3 className="text-lg font-black uppercase tracking-tight text-white mb-2">Explore Training Curriculums</h3>
-                <p className="text-xs text-white/40 uppercase tracking-widest font-black mb-8">Need to change your program? Ask Coach Arpan.</p>
+                <p className="text-xs text-white/40 uppercase tracking-widest font-black mb-8">Need to change your program? Ask Coach Singh Fitness.</p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {workoutPlans.map(plan => (
@@ -3794,7 +3797,7 @@ export default function App() {
                       <input
                         type="text"
                         required
-                        placeholder="e.g. pay@arpanfitness"
+                        placeholder="e.g. pay@singh_fitness"
                         value={bUpiId}
                         onChange={e => setBUpiId(e.target.value)}
                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-yellow-400 font-mono"
@@ -4281,7 +4284,7 @@ export default function App() {
                     />
                   </div>
                   <div className="text-black text-center mt-3">
-                    <p className="text-[10px] font-black uppercase text-black/50 tracking-widest">Arpan Fitness Gate Terminal</p>
+                    <p className="text-[10px] font-black uppercase text-black/50 tracking-widest">Singh Fitness Fitness Gate Terminal</p>
                     <p className="text-xs font-mono font-bold mt-0.5">Terminal ID: GATE-ATTEND-2026</p>
                   </div>
                 </div>

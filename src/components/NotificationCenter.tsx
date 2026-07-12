@@ -168,7 +168,7 @@ export default function NotificationCenter({
           {/* Footer block */}
           <div className="p-3.5 bg-white/[0.01] border-t border-white/[0.05] text-center">
             <span className="text-[9px] font-mono tracking-widest text-white/30 uppercase">
-              Arpan Gym Security Rules Active
+              Singh Fitness Gym Security Rules Active
             </span>
           </div>
 

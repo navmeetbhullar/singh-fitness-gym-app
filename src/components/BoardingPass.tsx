@@ -78,7 +78,7 @@ export default function BoardingPass({
                 <Dumbbell className="text-yellow-400 w-5 h-5 rotate-45" />
               </div>
               <div>
-                <h4 className="text-sm font-black uppercase tracking-tight text-white leading-none">Arpan Fitness</h4>
+                <h4 className="text-sm font-black uppercase tracking-tight text-white leading-none">Singh Fitness Fitness</h4>
                 <span className="text-[9px] text-yellow-400 font-bold uppercase tracking-widest">Premium Member</span>
               </div>
             </div>

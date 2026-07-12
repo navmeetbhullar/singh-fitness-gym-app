@@ -11,13 +11,13 @@ async function startServer() {
 
   // API routes
   app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", service: "Arpan Gym API" });
+    res.json({ status: "ok", service: "Singh Fitness Gym API" });
   });
 
   app.get("/api/status", (req, res) => {
     res.json({
       success: true,
-      message: "Arpan Gym Backend Portal Active with Firebase connection",
+      message: "Singh Fitness Gym Backend Portal Active with Firebase connection",
       timestamp: new Date().toISOString()
     });
   });
@@ -38,7 +38,7 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`[Arpan Gym Backend] Server running on http://localhost:${PORT}`);
+    console.log(`[Singh Fitness Gym Backend] Server running on http://localhost:${PORT}`);
   });
 }
 

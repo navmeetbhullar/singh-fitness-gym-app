@@ -36,7 +36,7 @@ export default function GymLogo({ className = "", size = 80 }: GymLogoProps) {
 
         {/* Curved Path for Text "ARPAN" */}
         <path
-          id="textPath-arpan"
+          id="textPath-singh-fitness"
           d="M 40,100 A 60,60 0 0,1 160,100"
           fill="none"
           stroke="none"
@@ -52,7 +52,7 @@ export default function GymLogo({ className = "", size = 80 }: GymLogoProps) {
 
         {/* Arched Text */}
         <text fill="#facc15" fontSize="20" fontWeight="900" letterSpacing="3" textAnchor="middle">
-          <textPath href="#textPath-arpan" startOffset="50%">
+          <textPath href="#textPath-singh-fitness" startOffset="50%">
             ARPAN
           </textPath>
         </text>

@@ -3,7 +3,7 @@ import { Html5Qrcode } from "html5-qrcode";
 import { X, QrCode, Check, AlertCircle, Camera } from "lucide-react";
 
 // The secret token baked into the generated attendance QR code
-export const ATTENDANCE_TOKEN = "arpan-gym-attend-v1";
+export const ATTENDANCE_TOKEN = "singh-fitness-gym-attend-v1";
 
 interface AttendanceScannerProps {
   onSuccess: () => void;
@@ -61,7 +61,7 @@ export default function AttendanceScanner({
             }
           } else {
             setScanState("error");
-            setErrorMsg("Invalid QR Code. Please scan the official Arpan Gym code.");
+            setErrorMsg("Invalid QR Code. Please scan the official Singh Fitness Gym code.");
           }
         },
         () => {}
