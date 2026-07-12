@@ -1925,8 +1925,8 @@ export default function App() {
     <div className="h-full w-full overflow-y-auto bg-[#020202] text-white font-sans relative pb-28 md:pb-8" style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
       
       {/* 1. LIQUID GLASS BACKDROP GLOWS */}
-      <div className="fixed top-[-100px] right-[-100px] w-[300px] h-[300px] bg-yellow-500/25 rounded-full blur-[110px] pointer-events-none"></div>
-      <div className="fixed bottom-[-100px] left-[-100px] w-[300px] h-[300px] bg-amber-500/15 rounded-full blur-[110px] pointer-events-none"></div>
+      <div className="fixed top-[-40px] right-[-40px] w-[280px] h-[280px] bg-yellow-500/30 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="fixed bottom-[-40px] left-[-40px] w-[280px] h-[280px] bg-amber-500/15 rounded-full blur-[100px] pointer-events-none"></div>
       <div className="fixed bottom-[10%] right-[15%] w-[180px] h-[180px] bg-yellow-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
       {/* 2. DYNAMIC REAL-TIME TOAST */}
