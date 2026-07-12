@@ -1925,7 +1925,7 @@ export default function App() {
     <div className="h-full w-full overflow-y-auto bg-[#020202] text-white font-sans relative pb-28 md:pb-8" style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
       
       {/* 1. LIQUID GLASS BACKDROP GLOWS */}
-      <div className="fixed top-[-150px] left-[-150px] w-[350px] md:w-[600px] h-[350px] md:h-[600px] bg-yellow-400/35 rounded-full blur-[100px] md:blur-[160px] pointer-events-none"></div>
+      <div className="fixed top-[-80px] left-[-60px] w-[280px] h-[280px] bg-yellow-500/40 rounded-full blur-[90px] pointer-events-none"></div>
       <div className="fixed bottom-[-100px] right-[-100px] w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-amber-500/10 rounded-full blur-[80px] md:blur-[140px] pointer-events-none"></div>
       <div className="fixed top-[40%] left-[30%] w-[400px] h-[400px] bg-yellow-600/5 rounded-full blur-[150px] pointer-events-none"></div>
 
