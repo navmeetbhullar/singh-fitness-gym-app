@@ -295,14 +295,14 @@ export default function App() {
         const allMembers = members.length > 0 ? members : await getCollectionData<Member>("members");
         const matchedMember = allMembers.find(m => {
           if (!m.memberId) return false;
-          const mCode = `ARPAN${m.name.toUpperCase().replace(/\s+/g, "").slice(0, 6)}${m.memberId.split("-").pop()}`;
+          const mCode = `SINGH_FITNESS${m.name.toUpperCase().replace(/\s+/g, "").slice(0, 6)}${m.memberId.split("-").pop()}`;
           return mCode === cleanedCode;
         });
 
         if (matchedMember) {
           refererId = matchedMember.id;
         } else {
-          setAuthError("Referral code not found. Please double-check the code (format: ARPAN + name + ID digits) or leave the field empty to skip.");
+          setAuthError("Referral code not found. Please double-check the code (format: SINGH_FITNESS + name + ID digits) or leave the field empty to skip.");
           setAuthSubmitting(false);
           return;
         }
@@ -832,7 +832,7 @@ export default function App() {
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(22);
-      doc.text("ARPAN GYM", 15, 18);
+      doc.text("SINGH_FITNESS GYM", 15, 18);
       
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
@@ -1023,7 +1023,7 @@ export default function App() {
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(22);
-      doc.text("ARPAN GYM - OWNER CONTROL PANEL", 15, 18);
+      doc.text("SINGH_FITNESS GYM - OWNER CONTROL PANEL", 15, 18);
       
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
@@ -1193,7 +1193,7 @@ export default function App() {
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
-      doc.text("ARPAN GYM - SYSTEM AUDIT REPORT", 15, 12);
+      doc.text("SINGH_FITNESS GYM - SYSTEM AUDIT REPORT", 15, 12);
       doc.setFontSize(8);
       doc.setTextColor(180, 180, 180);
       doc.text("ABSENCE, CHRONIC INACTIVITY & ENGAGEMENT LOGS", 15, 18);
@@ -1333,7 +1333,7 @@ export default function App() {
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
-      doc.text("ARPAN GYM - SYSTEM AUDIT REPORT", 15, 12);
+      doc.text("SINGH_FITNESS GYM - SYSTEM AUDIT REPORT", 15, 12);
       doc.setFontSize(8);
       doc.setTextColor(180, 180, 180);
       doc.text("COMPREHENSIVE MEMBER AUDIT LEDGER", 15, 18);
@@ -1385,7 +1385,7 @@ export default function App() {
           doc.setTextColor(255, 255, 255);
           doc.setFont("helvetica", "bold");
           doc.setFontSize(12);
-          doc.text("ARPAN GYM - SYSTEM AUDIT REPORT", 15, 12);
+          doc.text("SINGH_FITNESS GYM - SYSTEM AUDIT REPORT", 15, 12);
           doc.setFontSize(8);
           doc.setTextColor(180, 180, 180);
           doc.text("COMPREHENSIVE MEMBER AUDIT LEDGER (CONTINUED)", 15, 18);
@@ -2249,7 +2249,7 @@ export default function App() {
                       <label className="text-[10px] font-black uppercase text-white/40 tracking-wider block mb-2">Referral Code (Optional)</label>
                       <input
                         type="text"
-                        placeholder="e.g. ARPANJOHN1234"
+                        placeholder="e.g. SINGH_FITNESSJOHN1234"
                         value={regForm.referralCode}
                         onChange={e => setRegForm({...regForm, referralCode: e.target.value})}
                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-yellow-400 font-mono uppercase"

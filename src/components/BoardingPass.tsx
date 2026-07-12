@@ -25,7 +25,7 @@ export default function BoardingPass({
   onSignOut
 }: BoardingPassProps) {
   const [copied, setCopied] = useState(false);
-  const referralCode = `ARPAN${member.name.toUpperCase().replace(/\s+/g, "").slice(0, 6)}${member.memberId.split("-").pop()}`;
+  const referralCode = `SINGH_FITNESS${member.name.toUpperCase().replace(/\s+/g, "").slice(0, 6)}${member.memberId.split("-").pop()}`;
 
   const handleCopy = async () => {
     try {

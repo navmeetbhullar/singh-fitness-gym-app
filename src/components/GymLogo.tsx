@@ -34,7 +34,7 @@ export default function GymLogo({ className = "", size = 80 }: GymLogoProps) {
         {/* Yellow Outer Bevel Circle */}
         <circle cx="100" cy="100" r="76" fill="#000000" stroke="#facc15" strokeWidth="6" />
 
-        {/* Curved Path for Text "ARPAN" */}
+        {/* Curved Path for Text "SINGH_FITNESS" */}
         <path
           id="textPath-singh-fitness"
           d="M 40,100 A 60,60 0 0,1 160,100"
@@ -53,7 +53,7 @@ export default function GymLogo({ className = "", size = 80 }: GymLogoProps) {
         {/* Arched Text */}
         <text fill="#facc15" fontSize="20" fontWeight="900" letterSpacing="3" textAnchor="middle">
           <textPath href="#textPath-singh-fitness" startOffset="50%">
-            ARPAN
+            SINGH_FITNESS
           </textPath>
         </text>
 
