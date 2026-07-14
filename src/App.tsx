@@ -254,7 +254,7 @@ export default function App() {
       setAuthChecking(false);
     });
     return () => unsubscribe();
-  }, [members]);
+  }, []);
 
   const handleGoogleSignIn = async () => {
     setAuthError("");
@@ -406,8 +406,8 @@ export default function App() {
   useEffect(() => {
     async function initDb() {
       try {
-        // Members, announcements, notifications: load from Firebase (no fake seed data)
-        const loadedMembers = await getCollectionData<Member>("members");
+        // Announcements, notifications: load from Firebase (no fake seed data).
+        // Members are handled separately below via a live subscription.
         const loadedAnnouncements = await getCollectionData<GymAnnouncement>("announcements");
         const loadedNotifs = await getCollectionData<GymNotification>("notifications");
 
@@ -425,7 +425,6 @@ export default function App() {
           qrCodeUrl: currentConfig.qrCodeUrl || ""
         });
 
-        setMembers(loadedMembers);
         setAnnouncements(loadedAnnouncements);
         setNotifications(loadedNotifs);
         setWorkoutPlans(loadedWorkoutPlans);
@@ -438,12 +437,24 @@ export default function App() {
     }
     initDb();
 
+    // Real-time listener for members — updates instantly the moment a new
+    // member registers (admin sees the pending request live, no refresh)
+    // and the moment the admin approves/edits someone (that member's own
+    // session picks up the change live too).
+    const unsubscribeMembers = subscribeCollection<Member>("members", (items) => {
+      setMembers(items);
+      try {
+        localStorage.setItem("singh_fitness_gym_members", JSON.stringify(items));
+      } catch (e) {}
+    });
+
     // Real-time listener for planRequests — updates instantly on both admin and member sessions
     const unsubscribePlanRequests = subscribeCollection<PlanChangeRequest>("planRequests", (items) => {
       setPlanRequests(items);
     });
 
     return () => {
+      unsubscribeMembers();
       unsubscribePlanRequests();
     };
   }, []);
@@ -460,14 +471,6 @@ export default function App() {
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
-
-  useEffect(() => {
-    if (isLoading) return;
-    localStorage.setItem("singh_fitness_gym_members", JSON.stringify(members));
-    members.forEach((m) => {
-      saveDocument("members", m);
-    });
-  }, [members, isLoading]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -530,6 +533,33 @@ export default function App() {
 
   // --- Get current logged in member entity ---
   const currentMember = members.find(m => m.id === activeMemberId) || members[0];
+
+  // Real gym members only. Admin accounts also live in the `members`
+  // collection (so role-based sign-in routing works), but they should
+  // never be counted as a member — not in active/pending counts, not in
+  // the leaderboard, not in performer/report stats, and not sitting in
+  // the pending-approval queue if an admin account hasn't been flipped
+  // to "Active" yet.
+  const realMembers = members.filter(m => m.role !== "admin");
+
+  // Keep activeRole in sync live. If the admin approves, suspends, expires,
+  // or promotes this member in another session, this session's members
+  // subscription updates automatically — this effect reacts to that and
+  // moves the person out of Pending/into Member (etc.) with no refresh.
+  useEffect(() => {
+    if (!activeMemberId) return;
+    const liveProfile = members.find(m => m.id === activeMemberId);
+    if (!liveProfile) return;
+    if (liveProfile.role === "admin") {
+      setActiveRole("admin");
+    } else if (liveProfile.status === "Pending Approval") {
+      setActiveRole("pending");
+    } else if (liveProfile.status === "Expired") {
+      setActiveRole("expired");
+    } else {
+      setActiveRole("member");
+    }
+  }, [members, activeMemberId]);
 
   // Derived greeting shift message
   const getShiftGreeting = (member: Member) => {
@@ -600,12 +630,14 @@ export default function App() {
           }
         }
 
-        return {
+        const updatedM = {
           ...m,
           completedExercises: nextCompleted,
           points: Math.max(0, m.points + pointsAward),
           streak: m.streak === 0 && !isCompleted ? 1 : m.streak
         };
+        saveDocument("members", updatedM);
+        return updatedM;
       }
       return m;
     }));
@@ -628,11 +660,13 @@ export default function App() {
           triggerToast("Meal un-checked. -15 PTS.");
         }
 
-        return {
+        const updatedM = {
           ...m,
           completedMeals: nextCompleted,
           points: Math.max(0, m.points + pointsAward)
         };
+        saveDocument("members", updatedM);
+        return updatedM;
       }
       return m;
     }));
@@ -645,9 +679,13 @@ export default function App() {
         const nextWater = Math.max(0, parseFloat((m.waterIntake + qty).toFixed(2)));
         if (qty > 0) {
           triggerToast(`Hydrated! Current Intake: ${nextWater}L. +5 PTS`);
-          return { ...m, waterIntake: nextWater, points: m.points + 5 };
+          const updatedM = { ...m, waterIntake: nextWater, points: m.points + 5 };
+          saveDocument("members", updatedM);
+          return updatedM;
         }
-        return { ...m, waterIntake: nextWater };
+        const updatedM = { ...m, waterIntake: nextWater };
+        saveDocument("members", updatedM);
+        return updatedM;
       }
       return m;
     }));
@@ -672,12 +710,14 @@ export default function App() {
           if (newHistory.length > 6) newHistory.shift();
 
           triggerToast(`Weight registered: ${wVal} kg. Streak Points +20!`);
-          return {
+          const updatedM = {
             ...m,
             weight: wVal,
             weightHistory: newHistory,
             points: m.points + 20
           };
+          saveDocument("members", updatedM);
+          return updatedM;
         }
         return m;
       }));
@@ -695,11 +735,13 @@ export default function App() {
       setMembers(prev => prev.map(m => {
         if (m.id === currentMember.id) {
           triggerToast(`Logged ${sVal} hours of rest. Recoup points +15!`);
-          return {
+          const updatedM = {
             ...m,
             sleepHours: sVal,
             points: m.points + 15
           };
+          saveDocument("members", updatedM);
+          return updatedM;
         }
         return m;
       }));
@@ -1033,11 +1075,11 @@ export default function App() {
       doc.text("PORTAL: OWNER-ADMIN", 150, 26);
       
       // Executive counters
-      const activeCount = members.filter(m => m.status === "Active" || m.status === "Expiring Soon").length;
-      const expiringCount = members.filter(m => m.status === "Expiring Soon").length;
-      const pendingCount = members.filter(m => m.status === "Pending Approval").length;
+      const activeCount = realMembers.filter(m => m.status === "Active" || m.status === "Expiring Soon").length;
+      const expiringCount = realMembers.filter(m => m.status === "Expiring Soon").length;
+      const pendingCount = realMembers.filter(m => m.status === "Pending Approval").length;
       const todayString = today.toISOString().split("T")[0];
-      const todayAttendeesCount = members.filter(m => m.attendanceHistory?.includes(todayString)).length;
+      const todayAttendeesCount = realMembers.filter(m => m.attendanceHistory?.includes(todayString)).length;
       
       doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
       doc.setFont("helvetica", "bold");
@@ -1083,7 +1125,7 @@ export default function App() {
         "Sunday": 0, "Monday": 0, "Tuesday": 0, "Wednesday": 0, "Thursday": 0, "Friday": 0, "Saturday": 0
       };
       let totalAttendanceLogs = 0;
-      members.forEach(m => {
+      realMembers.forEach(m => {
         (m.attendanceHistory || []).forEach(dateStr => {
           const d = new Date(dateStr);
           if (!isNaN(d.getTime())) {
@@ -1118,7 +1160,7 @@ export default function App() {
       if (leastActiveCount === Infinity) leastActiveDay = "N/A";
       
       // Calculate Performers
-      const approvedMembers = members.filter(m => m.status !== "Pending Approval");
+      const approvedMembers = realMembers.filter(m => m.status !== "Pending Approval");
       let highestPerformer: Member | null = null;
       let lowestPerformer: Member | null = null;
       if (approvedMembers.length > 0) {
@@ -1134,7 +1176,7 @@ export default function App() {
       }
       
       // Calculate New Member
-      const sortedByJoin = [...members]
+      const sortedByJoin = [...realMembers]
         .filter(m => m.joinedDate)
         .sort((a, b) => new Date(b.joinedDate).getTime() - new Date(a.joinedDate).getTime());
       const newMember = sortedByJoin[0];
@@ -1364,7 +1406,7 @@ export default function App() {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       
-      members.forEach((m, idx) => {
+      realMembers.forEach((m, idx) => {
         if (currentY > 265) {
           // Footer page 3 inside page break
           doc.setDrawColor(230, 230, 230);
@@ -1877,7 +1919,7 @@ export default function App() {
   const todayRoutine = activeWorkoutPlan?.weeklyRoutine?.find(r => r.day === currentDayName) || activeWorkoutPlan?.weeklyRoutine?.[0];
 
   // Leaderboard data calculation
-  const calculatedLeaderboard = members
+  const calculatedLeaderboard = realMembers
     .filter(m => m.status !== "Pending Approval")
     .map(m => ({
       name: m.name,
@@ -1890,17 +1932,17 @@ export default function App() {
     .map((item, index) => ({ ...item, rank: index + 1 }));
 
   // Admin filter members
-  const filteredAdminMembers = members.filter(m => {
+  const filteredAdminMembers = realMembers.filter(m => {
     const matchSearch = m.name.toLowerCase().includes(memberSearchQuery.toLowerCase()) || 
                         m.memberId.toLowerCase().includes(memberSearchQuery.toLowerCase());
     return matchSearch;
   });
 
-  const activeCount = members.filter(m => m.status === "Active" || m.status === "Expiring Soon").length;
-  const expiringCount = members.filter(m => m.status === "Expiring Soon").length;
-  const pendingCount = members.filter(m => m.status === "Pending Approval").length;
+  const activeCount = realMembers.filter(m => m.status === "Active" || m.status === "Expiring Soon").length;
+  const expiringCount = realMembers.filter(m => m.status === "Expiring Soon").length;
+  const pendingCount = realMembers.filter(m => m.status === "Pending Approval").length;
   const todayString = new Date().toISOString().split("T")[0];
-  const todayAttendeesCount = members.filter(m => m.attendanceHistory?.includes(todayString)).length;
+  const todayAttendeesCount = realMembers.filter(m => m.attendanceHistory?.includes(todayString)).length;
 
   if (isLoading || authChecking) {
     return (
@@ -3332,8 +3374,8 @@ export default function App() {
                 </div>
 
                 <div className="space-y-4">
-                  {members.filter(m => m.status === "Pending Approval").length > 0 ? (
-                    members.filter(m => m.status === "Pending Approval").map(m => (
+                  {realMembers.filter(m => m.status === "Pending Approval").length > 0 ? (
+                    realMembers.filter(m => m.status === "Pending Approval").map(m => (
                       <div 
                         key={m.id}
                         className="p-5 bg-white/[0.01] border border-white/[0.04] rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-left"
@@ -4362,13 +4404,15 @@ export default function App() {
                     triggerToast("Already Checked-In for today! 🏋️");
                     return m;
                   }
-                  return {
+                  const updatedM = {
                     ...m,
                     streak: m.streak + 1,
                     points: m.points + 100,
                     attendanceHistory: [...m.attendanceHistory, todayString],
                     absentDays: 0
                   };
+                  saveDocument("members", updatedM);
+                  return updatedM;
                 }
                 return m;
               }));
@@ -4561,13 +4605,13 @@ export default function App() {
                   {activePopupType === "pending" && "Pending Approvals Queue"}
                 </span>
                 <h3 className="text-xl font-black uppercase text-white mt-1">
-                  {activePopupType === "active" && `Active Members (${members.filter(m => m.status === "Active" || m.status === "Expiring Soon").length})`}
-                  {activePopupType === "today" && `Today's Attendees (${members.filter(m => {
+                  {activePopupType === "active" && `Active Members (${realMembers.filter(m => m.status === "Active" || m.status === "Expiring Soon").length})`}
+                  {activePopupType === "today" && `Today's Attendees (${realMembers.filter(m => {
                     const todayString = new Date().toISOString().split("T")[0];
                     return m.attendanceHistory?.includes(todayString);
                   }).length})`}
-                  {activePopupType === "expiring" && `Expiring Soon (${members.filter(m => m.status === "Expiring Soon").length})`}
-                  {activePopupType === "pending" && `Pending Registrations (${members.filter(m => m.status === "Pending Approval").length})`}
+                  {activePopupType === "expiring" && `Expiring Soon (${realMembers.filter(m => m.status === "Expiring Soon").length})`}
+                  {activePopupType === "pending" && `Pending Registrations (${realMembers.filter(m => m.status === "Pending Approval").length})`}
                 </h3>
                 <p className="text-xs text-white/40 mt-1">
                   {activePopupType === "active" && "Showing all members with active access to facilities."}
@@ -4614,14 +4658,14 @@ export default function App() {
               {(() => {
                 let list: Member[] = [];
                 if (activePopupType === "active") {
-                  list = members.filter(m => m.status === "Active" || m.status === "Expiring Soon");
+                  list = realMembers.filter(m => m.status === "Active" || m.status === "Expiring Soon");
                 } else if (activePopupType === "today") {
                   const todayString = new Date().toISOString().split("T")[0];
-                  list = members.filter(m => m.attendanceHistory?.includes(todayString));
+                  list = realMembers.filter(m => m.attendanceHistory?.includes(todayString));
                 } else if (activePopupType === "expiring") {
-                  list = members.filter(m => m.status === "Expiring Soon");
+                  list = realMembers.filter(m => m.status === "Expiring Soon");
                 } else if (activePopupType === "pending") {
-                  list = members.filter(m => m.status === "Pending Approval");
+                  list = realMembers.filter(m => m.status === "Pending Approval");
                 }
 
                 if (popupSearchQuery.trim()) {
