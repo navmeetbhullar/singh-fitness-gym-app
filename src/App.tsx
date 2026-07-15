@@ -406,10 +406,8 @@ export default function App() {
   useEffect(() => {
     async function initDb() {
       try {
-        // Announcements, notifications: load from Firebase (no fake seed data).
-        // Members are handled separately below via a live subscription.
-        const loadedAnnouncements = await getCollectionData<GymAnnouncement>("announcements");
-        const loadedNotifs = await getCollectionData<GymNotification>("notifications");
+        // Announcements and notifications are handled separately below via
+        // live subscriptions — no fake seed data needed for either.
 
         // Workout & diet plans: seed defaults on first run so admin has a starting library
         const loadedWorkoutPlans = await seedCollectionIfEmpty("workoutPlans", DEFAULT_WORKOUT_PLANS);
@@ -425,8 +423,6 @@ export default function App() {
           qrCodeUrl: currentConfig.qrCodeUrl || ""
         });
 
-        setAnnouncements(loadedAnnouncements);
-        setNotifications(loadedNotifs);
         setWorkoutPlans(loadedWorkoutPlans);
         setDietPlans(loadedDietPlans);
       } catch (e) {
@@ -448,6 +444,26 @@ export default function App() {
       } catch (e) {}
     });
 
+    // Real-time listener for announcements — a new announcement appears in
+    // the member's feed instantly, no refresh needed.
+    const unsubscribeAnnouncements = subscribeCollection<GymAnnouncement>("announcements", (items) => {
+      setAnnouncements(items);
+      try {
+        localStorage.setItem("singh_fitness_gym_announcements", JSON.stringify(items));
+      } catch (e) {}
+    });
+
+    // Real-time listener for notifications — new notifications appear
+    // instantly, and this is also what stops deleted notifications from
+    // "coming back": every session now reads the same live Firestore state
+    // instead of writing back a stale local copy.
+    const unsubscribeNotifications = subscribeCollection<GymNotification>("notifications", (items) => {
+      setNotifications(items);
+      try {
+        localStorage.setItem("singh_fitness_gym_notifs", JSON.stringify(items));
+      } catch (e) {}
+    });
+
     // Real-time listener for planRequests — updates instantly on both admin and member sessions
     const unsubscribePlanRequests = subscribeCollection<PlanChangeRequest>("planRequests", (items) => {
       setPlanRequests(items);
@@ -455,6 +471,8 @@ export default function App() {
 
     return () => {
       unsubscribeMembers();
+      unsubscribeAnnouncements();
+      unsubscribeNotifications();
       unsubscribePlanRequests();
     };
   }, []);
@@ -471,22 +489,6 @@ export default function App() {
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
-
-  useEffect(() => {
-    if (isLoading) return;
-    localStorage.setItem("singh_fitness_gym_announcements", JSON.stringify(announcements));
-    announcements.forEach((a) => {
-      saveDocument("announcements", a);
-    });
-  }, [announcements, isLoading]);
-
-  useEffect(() => {
-    if (isLoading) return;
-    localStorage.setItem("singh_fitness_gym_notifs", JSON.stringify(notifications));
-    notifications.forEach((n) => {
-      saveDocument("notifications", n);
-    });
-  }, [notifications, isLoading]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -619,6 +621,7 @@ export default function App() {
               read: false
             };
             setNotifications(prevNotifs => [newLog, ...prevNotifs]);
+            saveDocument("notifications", newLog);
           } else {
             triggerToast("Exercise Checked! 👍");
           }
@@ -776,6 +779,7 @@ export default function App() {
       forAdmin: true
     };
     setNotifications(prev => [adminAlert, ...prev]);
+    saveDocument("notifications", adminAlert);
 
     setShowPlanRequestModal(false);
     triggerToast("Plan change request submitted to Coach Singh Fitness! 🤝");
@@ -1519,6 +1523,7 @@ export default function App() {
 
         // Remove the welcomeNotif from admin, we will append it so the member sees it when they log in!
         setNotifications(prev => [welcomeNotif, ...prev]);
+        saveDocument("notifications", welcomeNotif);
 
         const approvedM = {
           ...m,
@@ -1584,6 +1589,7 @@ export default function App() {
       read: false
     };
     setNotifications(prev => [planShiftNotif, ...prev]);
+    saveDocument("notifications", planShiftNotif);
 
     triggerToast("Approved and updated member's active plan curriculum! 🏋️");
   };
@@ -1606,6 +1612,7 @@ export default function App() {
       read: false
     };
     setNotifications(prev => [planShiftNotif, ...prev]);
+    saveDocument("notifications", planShiftNotif);
     triggerToast("Shift request rejected and member notified. ⛔");
   };
 
@@ -1765,6 +1772,7 @@ export default function App() {
     };
 
     setAnnouncements(prev => [newAnn, ...prev]);
+    saveDocument("announcements", newAnn);
 
     // Broadcast notification to all members
     const broadcastNotif: GymNotification = {
@@ -1776,6 +1784,7 @@ export default function App() {
       read: false
     };
     setNotifications(prev => [broadcastNotif, ...prev]);
+    saveDocument("notifications", broadcastNotif);
 
     setNewAnnouncementTitle("");
     setNewAnnouncementContent("");
@@ -1882,8 +1891,12 @@ export default function App() {
   // Mark all notifications read
   const handleMarkAllRead = () => {
     setNotifications(prev => prev.map(n => {
-      if (activeRole === "admin" && n.forAdmin) return { ...n, read: true };
-      if (activeRole !== "admin" && !n.forAdmin) return { ...n, read: true };
+      const shouldMark = (activeRole === "admin" && n.forAdmin) || (activeRole !== "admin" && !n.forAdmin);
+      if (shouldMark && !n.read) {
+        const updatedN = { ...n, read: true };
+        saveDocument("notifications", updatedN);
+        return updatedN;
+      }
       return n;
     }));
     triggerToast("All notifications marked as read.");
@@ -1906,7 +1919,12 @@ export default function App() {
   };
 
   const handleToggleRead = (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: !n.read } : n));
+    setNotifications(prev => prev.map(n => {
+      if (n.id !== id) return n;
+      const updatedN = { ...n, read: !n.read };
+      saveDocument("notifications", updatedN);
+      return updatedN;
+    }));
   };
 
   // --- Calculations for UI ---
@@ -2551,6 +2569,7 @@ export default function App() {
                   read: false
                 };
                 setNotifications(prev => [renewalReqNotif, ...prev]);
+                saveDocument("notifications", renewalReqNotif);
                 triggerToast("Renewal request submitted! Awaiting owner verification. 🤝");
               }}
               className="w-full max-w-md py-4 bg-red-500 hover:bg-red-400 active:scale-[0.98] transition-all rounded-2xl font-black text-xs text-white uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer shadow-[0_8px_20px_rgba(239,68,68,0.2)] border-t border-white/20"
@@ -4426,6 +4445,7 @@ export default function App() {
                 forAdmin: false
               };
               setNotifications(prev => [checkInAlert, ...prev]);
+              saveDocument("notifications", checkInAlert);
               triggerToast("Attendance Marked! Streak +1, Points +100 🏋️");
               setTimeout(() => setShowScanner(false), 2000);
             }}
@@ -4711,6 +4731,8 @@ export default function App() {
                               onClick={() => {
                                 setInspectedMemberId(m.id);
                                 setIsInspectorOpen(true);
+                                setActivePopupType(null);
+                                setPopupSearchQuery("");
                               }}
                               className="px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-black text-[10px] uppercase tracking-wider rounded-xl transition-all cursor-pointer"
                             >
@@ -4720,6 +4742,8 @@ export default function App() {
                               onClick={() => {
                                 setAssigningMember(m);
                                 setTrainerNoteInput(`Onboarding note: Focus on ${m.goals}. Begin with basic stretching.`);
+                                setActivePopupType(null);
+                                setPopupSearchQuery("");
                               }}
                               className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-black font-black text-[10px] uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-[0_0_10px_rgba(250,204,21,0.2)]"
                             >
@@ -4792,7 +4816,7 @@ export default function App() {
 
       {/* 13. ADMIN INTERVENTION FORM DRAWER (Assignment Modal) */}
       {assigningMember && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-fadeIn">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[75] animate-fadeIn">
           <div className="bg-neutral-950 border border-white/10 rounded-[32px] p-6 max-w-md w-full relative shadow-2xl text-left">
             <button
               onClick={() => setAssigningMember(null)}
