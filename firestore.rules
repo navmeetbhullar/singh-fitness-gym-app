@@ -1,39 +1,156 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 1. Global default-deny catch-all (Mandatory)
+
+    // ---------- Helpers ----------
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Admin = your own member doc has role "admin".
+    // Nobody can give themselves this role: new sign-ups must be "member",
+    // and members can never change their own role (see /members below).
+    // Only an existing admin, or you in the Firebase console, can make an admin.
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/members/$(request.auth.uid))
+        && get(/databases/$(database)/documents/members/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function myMemberDoc() {
+      return get(/databases/$(database)/documents/members/$(request.auth.uid)).data;
+    }
+
+    // Fields only the admin may change on a member's profile
+    function adminOnlyMemberFields() {
+      return ['role', 'status', 'points', 'expiryDate', 'joinedDate', 'memberId',
+              'membershipDuration', 'gymAccess', 'workoutPlanId', 'dietPlanId',
+              'trainerName', 'trainerPhone', 'trainerNote', 'referrals', 'referredByCode', 'email'];
+    }
+
+    // ---------- Default: deny everything not listed below ----------
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // 2. Explicit match blocks for EVERY collection in the blueprint
+    // ---------- Members (names, phones, emails, plans) ----------
     match /members/{memberId} {
-      allow read, write: if true;
+      // You can read your own profile; the admin can read everyone.
+      allow read: if isSelf(memberId) || isAdmin();
+
+      // Sign-up: only your own doc, and it must start as a pending, normal member
+      // with no plan, no expiry date and the starting 100 points.
+      allow create: if isAdmin() || (
+        isSelf(memberId)
+        && request.resource.data.role == 'member'
+        && request.resource.data.status == 'Pending Approval'
+        && request.resource.data.points == 100
+        && request.resource.data.referrals == 0
+        && request.resource.data.expiryDate == ''
+        && request.resource.data.workoutPlanId == ''
+        && request.resource.data.dietPlanId == ''
+        && !('membershipDuration' in request.resource.data)
+      );
+
+      // Members can edit their own profile (water, weight, sleep, check-in,
+      // completed meals/exercises) but never the admin-only fields.
+      // The one exception: asking for a renewal sets your status back to
+      // "Pending Approval" (that can only lower your access, never raise it).
+      allow update: if isAdmin() || (
+        isSelf(memberId)
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(adminOnlyMemberFields())
+          || (
+            request.resource.data.status == 'Pending Approval'
+            && !request.resource.data.diff(resource.data).affectedKeys()
+                 .difference(['status', 'membershipDuration'].toSet())
+                 .hasAny(adminOnlyMemberFields())
+          )
+        )
+      );
+
+      allow delete: if isAdmin();
     }
 
+    // ---------- Public leaderboard (name, points, streak only) ----------
+    match /leaderboard/{memberId} {
+      allow read: if signedIn();
+      // A member can only copy their real values from their own profile.
+      allow create, update: if isAdmin() || (
+        isSelf(memberId)
+        && request.resource.data.keys().hasOnly(['id', 'name', 'points', 'streak'])
+        && request.resource.data.id == memberId
+        && request.resource.data.name == myMemberDoc().name
+        && request.resource.data.points == myMemberDoc().points
+        && request.resource.data.streak == myMemberDoc().streak
+      );
+      allow delete: if isAdmin();
+    }
+
+    // ---------- Announcements ----------
     match /announcements/{announcementId} {
-      allow read, write: if true;
+      allow read: if signedIn();
+      allow write: if isAdmin();
     }
 
+    // ---------- Notifications ----------
+    // memberId = the member it's for, or "all" for gym-wide broadcasts.
+    // forAdmin = true means it's for the admin's inbox.
     match /notifications/{notificationId} {
-      allow read, write: if true;
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.memberId in [request.auth.uid, 'all']);
+
+      // Members can send alerts to the admin, or notes to themselves.
+      allow create: if isAdmin() || (
+        signedIn() && (
+          (request.resource.data.forAdmin == true && !('memberId' in request.resource.data))
+          || (request.resource.data.memberId == request.auth.uid
+              && request.resource.data.get('forAdmin', false) == false)
+        )
+      );
+
+      // Members can mark their own notifications read, or delete them.
+      allow update: if isAdmin() || (
+        signedIn()
+        && resource.data.memberId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+      );
+      allow delete: if isAdmin()
+        || (signedIn() && resource.data.memberId == request.auth.uid);
     }
 
+    // ---------- Plan change requests ----------
     match /planRequests/{requestId} {
-      allow read, write: if true;
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.memberId == request.auth.uid);
+      allow create: if isAdmin() || (
+        signedIn()
+        && request.resource.data.memberId == request.auth.uid
+        && request.resource.data.status == 'Pending'
+      );
+      allow update, delete: if isAdmin();
     }
 
+    // ---------- Workout & diet plans ----------
     match /workoutPlans/{planId} {
-      allow read, write: if true;
+      allow read: if signedIn();
+      allow write: if isAdmin();
     }
 
     match /dietPlans/{planId} {
-      allow read, write: if true;
+      allow read: if signedIn();
+      allow write: if isAdmin();
     }
 
-    // Gym configuration (UPI ID, QR code URL) - admin-managed settings
+    // ---------- Gym settings (UPI ID, QR code) ----------
     match /gymConfig/{configId} {
-      allow read, write: if true;
+      allow read: if signedIn();
+      allow write: if isAdmin();
     }
   }
 }

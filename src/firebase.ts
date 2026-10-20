@@ -10,7 +10,9 @@ import {
   setDoc,
   deleteDoc,
   writeBatch,
-  onSnapshot
+  onSnapshot,
+  query,
+  where
 } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { Member, GymAnnouncement, GymNotification, PlanChangeRequest, WorkoutPlan, DietPlan } from "./types";
@@ -98,6 +100,32 @@ export function subscribeCollection<T>(collectionName: string, callback: (items:
     console.error(`Error in realtime listener for ${collectionName}:`, error);
   });
   return unsubscribe;
+}
+
+// Real-time listener for only the documents where `field` equals one of `values`.
+// Used for non-admins, who are only allowed to read their own items.
+export function subscribeWhere<T>(collectionName: string, field: string, values: string[], callback: (items: T[]) => void): () => void {
+  const q = values.length === 1
+    ? query(collection(db, collectionName), where(field, "==", values[0]))
+    : query(collection(db, collectionName), where(field, "in", values));
+  return onSnapshot(q, (snapshot) => {
+    const items: T[] = [];
+    snapshot.forEach((d) => {
+      items.push({ id: d.id, ...d.data() } as unknown as T);
+    });
+    callback(items);
+  }, (error) => {
+    console.error(`Error in realtime listener for ${collectionName}:`, error);
+  });
+}
+
+// Real-time listener for a single document (empty list if it doesn't exist)
+export function subscribeDocument<T>(collectionName: string, id: string, callback: (items: T[]) => void): () => void {
+  return onSnapshot(doc(db, collectionName, id), (d) => {
+    callback(d.exists() ? [{ id: d.id, ...d.data() } as unknown as T] : []);
+  }, (error) => {
+    console.error(`Error in realtime listener for ${collectionName}/${id}:`, error);
+  });
 }
 
 // Batch seeding helper

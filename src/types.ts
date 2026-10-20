@@ -73,6 +73,16 @@ export interface Member {
   membershipDuration?: string;
   completedExercises?: string[];
   completedMeals?: string[];
+  referredByCode?: string; // referral code typed at sign-up; admin awards the bonus on approval
+}
+
+// Public leaderboard entry (one per member, doc id = member uid).
+// Holds only what other members are allowed to see.
+export interface LeaderboardEntry {
+  id: string;
+  name: string;
+  points: number;
+  streak: number;
 }
 
 export interface GymAnnouncement {
@@ -92,6 +102,7 @@ export interface GymNotification {
   type: "warning" | "info" | "success" | "motivational" | "admin_alert";
   read: boolean;
   forAdmin?: boolean;
+  memberId?: string; // who the notification is for: a member uid, or "all" for broadcasts
 }
 
 export interface PlanChangeRequest {
